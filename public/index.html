@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OSINT-X | Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030810;
+      --panel: #070f1c;
+      --border: #0e2040;
+      --accent: #00c8ff;
+      --accent2: #00ff9c;
+      --red: #ff4e6a;
+      --text: #b8d4e8;
+      --text-muted: #3a6a8a;
+      --text-bright: #e0f0ff;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Orbitron', sans-serif;
+      --sans: 'Rajdhani', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    canvas {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .grid-bg {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .auth-wrap {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 440px;
+      padding: 20px;
+    }
+    .logo-section {
+      text-align: center; margin-bottom: 32px;
+    }
+    .logo {
+      font-family: var(--display);
+      font-size: 36px; font-weight: 900;
+      letter-spacing: 6px; margin-bottom: 6px;
+    }
+    .logo .bracket { color: var(--accent); }
+    .logo .text    { color: var(--text-bright); }
+    .logo-sub {
+      font-family: var(--mono); font-size: 10px;
+      color: var(--text-muted); letter-spacing: 3px;
+    }
+    .logo-line {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin: 12px auto 0;
+    }
+    .auth-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 0 40px rgba(0,200,255,0.05), 0 20px 60px rgba(0,0,0,0.5);
+      position: relative; overflow: hidden;
+    }
+    .auth-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+    .card-title {
+      font-family: var(--display); font-size: 13px;
+      letter-spacing: 3px; color: var(--accent);
+      margin-bottom: 24px; text-align: center;
+    }
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      font-family: var(--mono); font-size: 9px;
+      letter-spacing: 2px; color: var(--text-muted);
+      display: block; margin-bottom: 7px;
+    }
+    .form-input {
+      width: 100%;
+      background: #060e1a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-family: var(--mono); font-size: 13px;
+      color: var(--text-bright); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(0,200,255,0.12);
+    }
+    .form-input::placeholder { color: var(--text-muted); font-size: 12px; }
+    .submit-btn {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, #003d5c, #005a8a);
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      font-family: var(--display); font-size: 12px;
+      font-weight: 700; letter-spacing: 3px;
+      color: var(--accent); cursor: pointer;
+      transition: all 0.2s; margin-top: 8px;
+      position: relative; overflow: hidden;
+    }
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #004d70, #0070aa);
+      box-shadow: 0 0 20px rgba(0,200,255,0.25);
+      transform: translateY(-1px);
+    }
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled {
+      opacity: 0.5; cursor: not-allowed; transform: none;
+    }
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0;
+    }
+    .divider-line {
+      flex: 1; height: 1px; background: var(--border);
+    }
+    .divider-text {
+      font-family: var(--mono); font-size: 9px;
+      color: var(--text-muted); letter-spacing: 1px;
+    }
+    .switch-link {
+      text-align: center;
+      font-family: var(--mono); font-size: 11px;
+      color: var(--text-muted);
+    }
+    .switch-link a {
+      color: var(--accent); text-decoration: none;
+      cursor: pointer; transition: color 0.2s;
+    }
+    .switch-link a:hover { color: var(--accent2); }
+    .error-msg {
+      background: rgba(255,78,106,0.1);
+      border: 1px solid rgba(255,78,106,0.3);
+      border-radius: 5px;
+      padding: 10px 12px;
+      font-family: var(--mono); font-size: 11px;
+      color: var(--red); margin-bottom: 16px;
+      display: none;
+    }
+    .success-msg {
+      background: rgba(0,255,156,0.08);
+      border: 1px solid rgba(0,255,156,0.2);
+      border-radius: 5px;
+      padding: 10px 12px;
+      font-family: var(--mono); font-size: 11px;
+      color: var(--accent2); margin-bottom: 16px;
+      display: none;
+    }
+    .loading {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(0,200,255,0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .features {
+      display: flex; gap: 8px; margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .feature-tag {
+      font-family: var(--mono); font-size: 8px;
+      letter-spacing: 1px; color: var(--text-muted);
+      background: rgba(0,200,255,0.05);
+      border: 1px solid rgba(0,200,255,0.1);
+      padding: 3px 8px; border-radius: 3px;
+    }
+    .password-wrap { position: relative; }
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 14px; padding: 0;
+      transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--accent); }
+    .strength-bar {
+      height: 2px; background: var(--border);
+      border-radius: 1px; margin-top: 6px;
+      overflow: hidden;
+    }
+    .strength-fill {
+      height: 100%; width: 0%;
+      border-radius: 1px;
+      transition: width 0.3s, background 0.3s;
+    }
+    .strength-text {
+      font-family: var(--mono); font-size: 8px;
+      color: var(--text-muted); margin-top: 3px;
+      letter-spacing: 1px;
+    }
+    @media (max-width: 480px) {
+      .auth-card { padding: 22px 18px; }
+      .logo { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <canvas id="particles"></canvas>
+
+  <div class="auth-wrap">
+    <div class="logo-section">
+      <div class="logo">
+        <span class="bracket">[</span>
+        <span class="text">OSINT-X</span>
+        <span class="bracket">]</span>
+      </div>
+      <div class="logo-sub">OPEN SOURCE INTELLIGENCE SYSTEM</div>
+      <div class="logo-line"></div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-card" id="loginCard">
+      <div class="card-title">// ACCESS TERMINAL</div>
+      <div class="features">
+        <span class="feature-tag">10 MODULES</span>
+        <span class="feature-tag">REAL DNS</span>
+        <span class="feature-tag">IP GEOLOCATION</span>
+        <span class="feature-tag">DARK UI</span>
+      </div>
+      <div class="error-msg" id="loginError"></div>
+      <div class="success-msg" id="loginSuccess"></div>
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" type="email" id="loginEmail" placeholder="agent@osint-x.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px"/>
+          <button class="eye-btn" onclick="togglePass('loginPassword', this)">👁</button>
+        </div>
+      </div>
+      <button class="submit-btn" id="loginBtn" onclick="handleLogin()">
+        ▶ LOGIN
+      </button>
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">OR</div>
+        <div class="divider-line"></div>
+      </div>
+      <div class="switch-link">
+        No account? <a onclick="showSignup()">Create one here →</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div class="auth-card" id="signupCard" style="display:none">
+      <div class="card-title">// CREATE ACCOUNT</div>
+      <div class="error-msg" id="signupError"></div>
+      <div class="success-msg" id="signupSuccess"></div>
+      <div class="form-group">
+        <label class="form-label">USERNAME</label>
+        <input class="form-input" type="text" id="signupUsername" placeholder="agent_name" autocomplete="username"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" type="email" id="signupEmail" placeholder="agent@osint-x.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="signupPassword" placeholder="Min 6 characters" oninput="checkStrength(this.value)" style="padding-right:40px"/>
+          <button class="eye-btn" onclick="togglePass('signupPassword', this)">👁</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+        <div class="strength-text" id="strengthText"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">CONFIRM PASSWORD</label>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="signupConfirm" placeholder="Repeat password" style="padding-right:40px"/>
+          <button class="eye-btn" onclick="togglePass('signupConfirm', this)">👁</button>
+        </div>
+      </div>
+      <button class="submit-btn" id="signupBtn" onclick="handleSignup()">
+        ✦ CREATE ACCOUNT
+      </button>
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">OR</div>
+        <div class="divider-line"></div>
+      </div>
+      <div class="switch-link">
+        Already have an account? <a onclick="showLogin()">Login here →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    const pts = [];
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    for (let i = 0; i < 50; i++) pts.push({ x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, vx: (Math.random()-.5)*.2, vy: (Math.random()-.5)*.2, r: Math.random()*1.2+.3, a: Math.random()*.3+.1 });
+    function draw() { ctx.clearRect(0,0,W,H); for(const p of pts) { ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle=`rgba(0,200,255,${p.a})`; ctx.fill(); p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W)p.vx*=-1; if(p.y<0||p.y>H)p.vy*=-1; } requestAnimationFrame(draw); }
+    draw();
+
+    // Check if already logged in
+    const token = localStorage.getItem('osintx_token');
+    if (token) {
+      fetch('/api/auth/verify', { headers: { 'authorization': token } })
+        .then(r => r.json()).then(d => { if (d.valid) window.location.href = '/dashboard.html'; })
+        .catch(() => {});
+    }
+
+    function showSignup() {
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('signupCard').style.display = 'block';
+    }
+    function showLogin() {
+      document.getElementById('signupCard').style.display = 'none';
+      document.getElementById('loginCard').style.display = 'block';
+    }
+
+    function togglePass(id, btn) {
+      const el = document.getElementById(id);
+      el.type = el.type === 'password' ? 'text' : 'password';
+      btn.textContent = el.type === 'password' ? '👁' : '🙈';
+    }
+
+    function checkStrength(val) {
+      const fill = document.getElementById('strengthFill');
+      const txt  = document.getElementById('strengthText');
+      if (!val) { fill.style.width='0%'; txt.textContent=''; return; }
+      let score = 0;
+      if (val.length >= 6)  score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const levels = [
+        { pct:'20%', color:'#ff4e6a', text:'WEAK' },
+        { pct:'40%', color:'#ff9d00', text:'FAIR' },
+        { pct:'60%', color:'#ffd966', text:'MODERATE' },
+        { pct:'80%', color:'#00c8ff', text:'STRONG' },
+        { pct:'100%',color:'#00ff9c', text:'VERY STRONG' },
+      ];
+      const lvl = levels[Math.min(score-1, 4)] || levels[0];
+      fill.style.width = lvl.pct;
+      fill.style.background = lvl.color;
+      txt.textContent = lvl.text;
+      txt.style.color = lvl.color;
+    }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = '⚠ ' + msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 4000);
+    }
+    function showSuccess(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = '✓ ' + msg;
+      el.style.display = 'block';
+    }
+
+    async function handleLogin() {
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn      = document.getElementById('loginBtn');
+      if (!email || !password) return showError('loginError', 'Please fill all fields');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> AUTHENTICATING...';
+      try {
+        const res  = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        localStorage.setItem('osintx_token', data.token);
+        localStorage.setItem('osintx_user', JSON.stringify(data.user));
+        showSuccess('loginSuccess', 'Access granted! Redirecting...');
+        setTimeout(() => window.location.href = '/dashboard.html', 1000);
+      } catch (e) {
+        showError('loginError', e.message);
+        btn.disabled = false;
+        btn.innerHTML = '▶ LOGIN';
+      }
+    }
+
+    async function handleSignup() {
+      const username = document.getElementById('signupUsername').value.trim();
+      const email    = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const confirm  = document.getElementById('signupConfirm').value;
+      const btn      = document.getElementById('signupBtn');
+      if (!username || !email || !password || !confirm) return showError('signupError', 'Please fill all fields');
+      if (password !== confirm) return showError('signupError', 'Passwords do not match');
+      if (password.length < 6) return showError('signupError', 'Password must be at least 6 characters');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> CREATING ACCOUNT...';
+      try {
+        const res  = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Signup failed');
+        localStorage.setItem('osintx_token', data.token);
+        localStorage.setItem('osintx_user', JSON.stringify(data.user));
+        showSuccess('signupSuccess', 'Account created! Redirecting...');
+        setTimeout(() => window.location.href = '/dashboard.html', 1000);
+      } catch (e) {
+        showError('signupError', e.message);
+        btn.disabled = false;
+        btn.innerHTML = '✦ CREATE ACCOUNT';
+      }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (document.getElementById('loginCard').style.display !== 'none') handleLogin();
+        else handleSignup();
+      }
+    });
+  </script>
+</body>
+</html>
